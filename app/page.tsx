@@ -21,11 +21,7 @@ export default function Home() {
         is a violation of your rights and interests, I am very sorry, please
         contact me, I will be deleted to deal with.
       </div>
-      <section className="mt-10 mb-6 grid grid-cols-2 gap-2 md:grid-cols-3 md:gap-3">
-        {wallpapers.map((i, k) => {
-          return <WallpaperView data={i} key={k} />;
-        })}
-      </section>
+      <WallpaperView data={wallpapers} />
     </main>
   );
 }

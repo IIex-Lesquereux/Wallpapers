@@ -1,48 +1,100 @@
 "use client";
 
-import { useState } from "react";
-import clsx from "clsx";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { ImgArrayProps } from "@/types";
 import { download } from "@/utils";
-import { FiDownload } from "react-icons/fi";
+import { FiDownload, FiZoomIn, FiZoomOut, FiRotateCw } from "react-icons/fi";
 import { PhotoProvider, PhotoView } from "react-photo-view";
 import "react-photo-view/dist/react-photo-view.css";
 
 interface Props {
-  data: ImgArrayProps;
+  data: ImgArrayProps[];
 }
 
+const ToolbarClass =
+  "mx-2 cursor-pointer text-[14px] w-[1.5em] h-[1.5em] select-none opacity-75 hover:opacity-100 transition-opacity";
+
+const FullScreenIcon = (props: React.HTMLAttributes<any>) => {
+  const [fullscreen, setFullscreen] = useState<boolean>(false);
+  useEffect(() => {
+    document.onfullscreenchange = () => {
+      setFullscreen(Boolean(document.fullscreenElement));
+    };
+  }, []);
+  return (
+    <svg
+      className="PhotoView-Slider__toolbarIcon"
+      fill="white"
+      width="44"
+      height="44"
+      viewBox="0 0 768 768"
+      {...props}
+    >
+      {fullscreen ? (
+        <path d="M511.5 256.5h96v63h-159v-159h63v96zM448.5 607.5v-159h159v63h-96v96h-63zM256.5 256.5v-96h63v159h-159v-63h96zM160.5 511.5v-63h159v159h-63v-96h-96z" />
+      ) : (
+        <path d="M448.5 160.5h159v159h-63v-96h-96v-63zM544.5 544.5v-96h63v159h-159v-63h96zM160.5 319.5v-159h159v63h-96v96h-63zM223.5 448.5v96h96v63h-159v-159h63z" />
+      )}
+    </svg>
+  );
+};
+
 export default function WallpaperView({ data }: Props) {
-  const [isReady, setIsReady] = useState(false);
+  function toggleFullScreen() {
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else {
+      const element = document.querySelector(".PhotoView-Portal");
+      if (element) {
+        element.requestFullscreen();
+      }
+    }
+  }
 
   return (
-    <div className="cursor-pointer relative group select-none h-[100px] md:h-[200px]">
-      <PhotoProvider>
-        <PhotoView src={data.src}>
-          <Image
-            src={data.src}
-            alt=""
-            placeholder="blur"
-            className={clsx(
-              "rounded-md select-none opacity-0 transition-opacity duration-500",
-              isReady && "opacity-100"
+    <PhotoProvider
+      toolbarRender={({ onScale, scale, rotate, onRotate, index }) => {
+        return (
+          <>
+            <FiZoomIn
+              onClick={() => onScale(scale + 1)}
+              className={ToolbarClass}
+            />
+            <FiZoomOut
+              onClick={() => onScale(scale - 1)}
+              className={ToolbarClass}
+            />
+            {document.fullscreenEnabled && (
+              <FullScreenIcon onClick={toggleFullScreen} />
             )}
-            fill
-            onLoad={() => setIsReady(true)}
-            onError={() => setIsReady(false)}
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            blurDataURL="data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 200'%3E%3Cfilter id='b' color-interpolation-filters='sRGB'%3E%3CfeGaussianBlur stdDeviation='20'/%3E%3CfeColorMatrix values='1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 100 -1' result='s'/%3E%3CfeFlood x='0' y='0' width='100%25' height='100%25'/%3E%3CfeComposite operator='out' in='s'/%3E%3CfeComposite in2='SourceGraphic'/%3E%3CfeGaussianBlur stdDeviation='20'/%3E%3C/filter%3E%3Cimage width='100%25' height='100%25' x='0' y='0' preserveAspectRatio='none' style='filter: url(%23b);' href='data:image/jpeg;base64,/9j/2wBDAAoHBwgHBgoICAgLCgoLDhgQDg0NDh0VFhEYIx8lJCIfIiEmKzcvJik0KSEiMEExNDk7Pj4+JS5ESUM8SDc9Pjv/2wBDAQoLCw4NDhwQEBw7KCIoOzs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozv/wgARCAAFAAgDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAX/xAAVAQEBAAAAAAAAAAAAAAAAAAACA//aAAwDAQACEAMQAAABmBS//8QAFxAAAwEAAAAAAAAAAAAAAAAAAQIEEf/aAAgBAQABBQJKsH//xAAVEQEBAAAAAAAAAAAAAAAAAAAAEf/aAAgBAwEBPwGP/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAgBAgEBPwF//8QAFhABAQEAAAAAAAAAAAAAAAAAAQAz/9oACAEBAAY/Asxv/8QAFxABAAMAAAAAAAAAAAAAAAAAAQAhcf/aAAgBAQABPyErjbP/2gAMAwEAAgADAAAAEPv/xAAVEQEBAAAAAAAAAAAAAAAAAAAAEf/aAAgBAwEBPxCH/8QAFhEAAwAAAAAAAAAAAAAAAAAAAAER/9oACAECAQE/EKz/xAAYEAEAAwEAAAAAAAAAAAAAAAABABFRkf/aAAgBAQABPxAkZ2w9n//Z'/%3E%3C/svg%3E"
-          />
-        </PhotoView>
-      </PhotoProvider>
-      <div
-        className="absolute bottom-1 right-1 text-[#1677ff] text-[1.5em] hidden md:group-hover:block p-1 rounded"
-        onClick={() => download(data.src, data.name)}
-        style={{ background: "rgba(255,255,255,.7)" }}
-      >
-        <FiDownload />
-      </div>
-    </div>
+            <FiRotateCw
+              onClick={() => onRotate(rotate + 90)}
+              className={ToolbarClass}
+            />
+            <FiDownload
+              className={ToolbarClass}
+              onClick={() => download(data[index].src, data[index].name)}
+            />
+          </>
+        );
+      }}
+    >
+      <section className="mt-10 mb-6 grid grid-cols-2 gap-2 md:grid-cols-3 md:gap-3">
+        {data.map((i, k) => (
+          <PhotoView key={k} src={i.src}>
+            <div className="relative h-[100px] md:h-[200px]">
+              <Image
+                fill
+                src={i.src}
+                alt=""
+                key={k}
+                className="cursor-pointer select-none object-cover rounded-lg"
+              />
+            </div>
+          </PhotoView>
+        ))}
+      </section>
+    </PhotoProvider>
   );
 }
